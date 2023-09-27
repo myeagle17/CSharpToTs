@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -70,6 +71,9 @@ namespace Terry
             else if( firstMember is NamespaceDeclarationSyntax)
             {
                 PrintMember(((NamespaceDeclarationSyntax)firstMember).Members);
+            }else if(firstMember is EnumDeclarationSyntax)
+            {
+                PrintEnum((EnumDeclarationSyntax)firstMember);
             }
             else
             {
@@ -107,20 +111,42 @@ namespace Terry
                 var v = variableDeclarationSyntax.Variables[0];
                 if (null != v.Initializer)
                 {
-                    str += $"{v.Initializer.ToString()}";
+                    var initStr = v.Initializer.ToString();
+
+                    var iniValue = v.Initializer.Value as ObjectCreationExpressionSyntax;
+                    if(null != iniValue)
+                    {
+                        initStr = $" = {iniValue.NewKeyword} {GetType(iniValue.Type)}";
+                    }
+
+                    str += $"{initStr}";
                 }
             }
             str +=";";
             return str;
         }
-        
+
+        //private string GetVariableDeclarationSyntaxType(VariableDeclarationSyntax variableDeclarationSyntax)
+        //{
+        //    if (variableDeclarationSyntax.Type.GetText().ToString() == "List")
+        //    {
+        //        var typeName = "Array";
+        //        var
+        //    }
+        //}
+
         private void PrintMethod(MethodDeclarationSyntax methodDeclarationSyntax)
         {
-            FileWrite.WriteLine($"{methodDeclarationSyntax.Identifier}{GetParameterList(methodDeclarationSyntax.ParameterList)}{{");
+            var returnTypeStr = "";
+            if(null != methodDeclarationSyntax.ReturnType)
+            {
+               returnTypeStr = ":" + GetType(methodDeclarationSyntax.ReturnType);
+            }
+            FileWrite.WriteLine($"{GetModifier(methodDeclarationSyntax.Modifiers)}{methodDeclarationSyntax.Identifier}{GetParameterList(methodDeclarationSyntax.ParameterList)}{returnTypeStr}{{");
             // 写变量
             
             // 写语句
-            PrintStatements(methodDeclarationSyntax.Body.Statements);
+            if(null != methodDeclarationSyntax.Body) PrintStatements(methodDeclarationSyntax.Body.Statements);
 
             FileWrite.WriteLine($"}}");
         }
@@ -147,10 +173,23 @@ namespace Terry
                     firstStr += $":{GetType(propertyDeclaration.Type)}";
                 }
                 FileWrite.WriteLine(firstStr);
-                FileWrite.WriteLine(item.Body.ToString());
-                //item.Body.Statements
-                //FileWrite.WriteLine($"}}");
+                if (null != item.Body) { 
+                    FileWrite.WriteLine(item.Body.ToString());
+                }
+                else
+                {
+                    FileWrite.WriteLine("{}");
+                }
             }
+        }
+
+        private void PrintEnum(EnumDeclarationSyntax enumDeclaration)
+        {
+            if (null == enumDeclaration) return;
+            FileWrite.WriteLine($"export enum {enumDeclaration.Identifier}");
+            FileWrite.WriteLine("{");
+            FileWrite.WriteLine($"{enumDeclaration.Members}");
+            FileWrite.WriteLine("}");
         }
 
 
@@ -163,7 +202,6 @@ namespace Terry
                 if(PrintIfStatement(item)) continue;
                 if(PrintForStatement(item)) continue;
                 if (PrintForeachStatement(item)) continue;
-                if (PrintReturnStatement(item)) continue;
                 FileWrite.WriteLine("// 未处理代码");
                 FileWrite.WriteLine(item.ToFullString());
             }
@@ -262,12 +300,26 @@ namespace Terry
                 conditionStr = condition.ToString();
             }
             var incrementStr = "";
-            if (null != incrementStr)
+            if (forStatement.Incrementors.Count>0)
             {
                 incrementStr = forStatement.Incrementors[0].ToString();
             }
+            else
+            {
+                Console.WriteLine("state.increm entors null is :" + statementSyntax.ToFullString());
+            }
             FileWrite.WriteLine($"for({decalrationStr};{conditionStr};{incrementStr}){{");
-            PrintStatements((forStatement.Statement as BlockSyntax).Statements);
+            if (forStatement.Statement is BlockSyntax) { 
+                PrintStatements((forStatement.Statement as BlockSyntax).Statements);
+            }
+            else if(forStatement.Statement is ExpressionStatementSyntax)
+            {
+                PrintExpressionStatementSyntax(forStatement.Statement);
+            }
+            else
+            {
+                FileWrite.WriteLine(forStatement.Statement.ToString());
+            }
             FileWrite.WriteLine("}");    
             return true;
         }
@@ -332,6 +384,7 @@ namespace Terry
         }
           private string GetConstructorInitializer(ConstructorInitializerSyntax constructorInitializerSyntax)
         {
+            if (null == constructorInitializerSyntax) return "";
             var result = "super(";
             bool first = true;
             foreach (var expression in constructorInitializerSyntax.ArgumentList.Arguments)
@@ -357,13 +410,9 @@ namespace Terry
             return result;
         }
 
-        private string GetType(string type)
+        private string GetType(TypeSyntax type)
         {
             return TypeModify.Trans(type);
-        }
-        private string GetType(object type)
-        {
-            return TypeModify.Trans(type.ToString());
         }
     }
 }

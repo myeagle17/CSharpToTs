@@ -19,7 +19,15 @@ namespace CodeAnalysisApp1
     {
         static async Task Main(string[] args)
         {
-            new Generator().GeneratorFile("D:\\cocos-client\\assets\\scripts\\logic\\module\\CmdModules\\model\\frame\\Comp\\TestGenerator.as", "D:\\cocos-client\\assets\\scripts\\logic\\module\\CmdModules\\model\\frame\\Comp\\TestGenerator.ts");
+            if (args.Length >= 2)
+            {
+                new Generator().GeneratorFile(args[0], args[1]);
+
+            }
+            else
+            {
+            new Generator().GeneratorFile("D:\\TOP\\client\\Assets\\Deer\\Scripts\\Hotfix\\HotFixBusiness\\UI\\UIModelProperty\\editAttrComItem.cs", "D:\\cocos-client\\assets\\scripts\\logic\\module\\CmdModules\\model\\frame\\Comp\\TestGenerator.ts");
+            }
             Console.WriteLine("end");
         }      
     }

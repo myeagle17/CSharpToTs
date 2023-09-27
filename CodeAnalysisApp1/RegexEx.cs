@@ -28,11 +28,10 @@ namespace Terry
 
         };
 
-        public static List<RegexInfo> regexTypes = new List<RegexInfo>()
+        public static List<RegexInfo> regexFiles = new List<RegexInfo>()
         {
-            new RegexInfo("^[ ]*(List)<","Array<"),
-            new RegexInfo("<int","this.$1("),
-
+            new RegexInfo("^[ ]*base.","super."),
+            new RegexInfo("^[ ]*(\\w+)\\(","this.$1("),
         };
 
         public static string RpExpressionStatement(string input)
@@ -41,10 +40,10 @@ namespace Terry
             return RpList(input, regexInfos);
         }
 
-        //public static string RpField(string filedType)
-        //{
-
-        //}
+        public static string RpEveryLine(string filedType)
+        {
+            return RpList(filedType, regexInfos);
+        }
 
         private static string RpList(string input,List<RegexInfo> list)
         {
