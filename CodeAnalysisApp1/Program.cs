@@ -28,6 +28,7 @@ namespace CodeAnalysisApp1
             {
             new Generator().GeneratorFile("D:\\TOP\\client\\Assets\\Deer\\Scripts\\Hotfix\\HotFixBusiness\\UI\\UIModelProperty\\editAttrComItem.cs", "D:\\cocos-client\\assets\\scripts\\logic\\module\\CmdModules\\model\\frame\\Comp\\TestGenerator.ts");
             }
+            Console.ReadKey();
             Console.WriteLine("end");
         }      
     }

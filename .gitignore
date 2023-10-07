@@ -1,2 +1,5 @@
 CodeAnalysisApp1/bin/**/*
 CodeAnalysisApp1/obj/**/*
+.vs/**/*
+.vscode/**/*
+
